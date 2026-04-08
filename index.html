@@ -1,16 +1,14 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Gym Diary</title>
-    
     <meta name="theme-color" content="#000000">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936886.png">
-    
     <link rel="manifest" href='data:application/json,{"name":"Gym Diary","short_name":"GymDiary","start_url":"/","display":"standalone","background_color":"#000000","theme_color":"#000000","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2936/2936886.png","sizes":"512x512","type":"image/png"}]}'>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -25,6 +23,9 @@
             --border-color: #2c2c2e;
             --btn-save-bg: #f2f2f7; 
             --btn-save-text: #000000;
+            --control-bg: #121214;
+            --active-var-bg: #3a3a3c;
+            --active-var-text: #ffffff;
             --radius-xl: 16px; 
             --radius-md: 10px;
         }
@@ -32,13 +33,16 @@
         [data-theme="light"] {
             --bg-color: #f2f2f2; 
             --surface-color: #ffffff; 
-            --surface-lighter: #e8e8e8; 
+            --surface-lighter: #f2f2f7; 
             --text-primary: #000000; 
             --text-secondary: #666666; 
             --text-muted: #aaaaaa; 
             --border-color: #f2f2f7;
             --btn-save-bg: #111111;
             --btn-save-text: #ffffff;
+            --control-bg: #e5e5ea;
+            --active-var-bg: #8e8e93;
+            --active-var-text: #ffffff;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; border: none; outline: none; }
@@ -46,146 +50,237 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
-            margin: 0;
-            padding: max(24px, env(safe-area-inset-top)) 16px max(80px, env(safe-area-inset-bottom));
+            margin: 0; padding: 0;
             -webkit-font-smoothing: antialiased;
             transition: background-color 0.3s ease;
+            display: flex; justify-content: center;
+            -webkit-user-select: none; user-select: none;
         }
 
-        .icon { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-        .icon-sm { width: 14px; height: 14px; stroke-width: 2.5; }
+        .app-container {
+            width: 100%; max-width: 600px; min-height: 100vh;
+            padding: max(24px, env(safe-area-inset-top)) 16px max(100px, env(safe-area-inset-bottom));
+        }
 
+        .icon { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         h1 { font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
-        
-        .theme-toggle { background: none; color: var(--text-primary); cursor: pointer; padding: 8px; display: flex; align-items: center; }
+        .theme-toggle { background: none; color: var(--text-primary); cursor: pointer; padding: 8px; display: flex; }
 
-        .tabs { display: flex; background: var(--surface-color); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+        .tabs { display: flex; background: var(--surface-color); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
         .tab { flex: 1; text-align: center; padding: 10px 0; font-size: 14px; font-weight: 600; color: var(--text-muted); border-radius: 9px; cursor: pointer; }
         .tab.active { background: var(--surface-lighter); color: var(--text-primary); }
 
         .card { background: var(--surface-color); border-radius: var(--radius-xl); margin-bottom: 16px; overflow: hidden; }
-
         .card-header { padding: 18px 16px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; cursor: pointer; }
         .health-left { display: flex; flex-direction: column; gap: 4px; }
         .title { font-size: 16px; font-weight: 700; line-height: 1.2; }
+        .variation-sub { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
         .warmup-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
-        .warmup-label b { color: var(--text-primary); }
         .weight-value { font-size: 26px; font-weight: 800; line-height: 1; white-space: nowrap; }
         .weight-unit { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-left: 2px; }
 
         .card-body { display: none; padding: 12px 16px 16px 16px; border-top: 1px solid var(--border-color); }
         .card.expanded .card-body { display: block; }
 
-        .card-top-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .action-link { background: none; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 0; }
+        .var-selector { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 8px; scrollbar-width: none; }
+        .var-selector::-webkit-scrollbar { display: none; }
+        .var-chip { padding: 8px 14px; background: var(--surface-lighter); border-radius: 20px; font-size: 12px; font-weight: 700; color: var(--text-muted); white-space: nowrap; cursor: pointer; transition: all 0.2s ease; }
+        .var-chip.active { background: var(--active-var-bg); color: var(--active-var-text); }
+        .var-add { background: var(--control-bg); color: var(--text-secondary); padding: 8px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
         .input-wrapper { position: relative; background: var(--surface-lighter); border-radius: var(--radius-md); padding: 10px 14px; }
         .input-wrapper label { display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
-        input { width: 100%; background: none; color: var(--text-primary); font-size: 18px; font-weight: 700; padding: 0; }
+        input { width: 100%; background: none; color: var(--text-primary); font-size: 18px; font-weight: 700; padding: 0; -webkit-user-select: text; user-select: text;}
 
-        .btn-save { width: 100%; background: var(--btn-save-bg); color: var(--btn-save-text); padding: 18px; border-radius: 12px; font-size: 14px; font-weight: 800; text-transform: uppercase; cursor: pointer; margin-bottom: 16px; }
+        .btn-save { width: 100%; background: var(--btn-save-bg); color: var(--btn-save-text); padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 800; text-transform: uppercase; cursor: pointer; margin-bottom: 16px; transition: opacity 0.2s; }
 
         .photo-section { margin-top: 8px; border-top: 1px solid var(--border-color); padding-top: 16px; }
-        .photo-container { position: relative; border-radius: var(--radius-md); overflow: hidden; background: var(--bg-color); width: 100%; }
-        .photo-container img { width: 100%; display: block; object-fit: cover; max-height: 250px; }
-        .photo-btn { font-size: 13px; font-weight: 600; color: var(--text-secondary); cursor: pointer; padding: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--surface-lighter); border-radius: var(--radius-md); }
+        .photo-container { position: relative; border-radius: var(--radius-md); overflow: hidden; background: var(--bg-color); width: 100%; display: flex; align-items: center; justify-content: center; }
+        .photo-container.has-photo { height: 200px; margin-bottom: 12px; }
+        .photo-container img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .photo-btn { font-size: 13px; font-weight: 600; color: var(--text-secondary); cursor: pointer; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--surface-lighter); border-radius: var(--radius-md); margin-bottom: 12px; }
         .photo-remove { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: #fff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-        .btn-add { width: 100%; background: var(--surface-color); color: var(--text-secondary); padding: 18px; border-radius: var(--radius-xl); font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 20px; text-align: center; display: block; }
-        .data-controls { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-data { flex: 1; background: var(--surface-color); color: var(--text-secondary); padding: 14px; border-radius: var(--radius-md); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .bottom-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .action-link-btn { background: var(--control-bg); color: var(--text-secondary); padding: 12px; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; }
+
+        .footer-controls { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 3fr; 
+            gap: 8px; 
+            margin-top: 24px; 
+        }
+        .btn-control { 
+            background: var(--control-bg); 
+            color: var(--text-primary); 
+            padding: 14px 4px; 
+            border-radius: 12px; 
+            font-size: 12px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; gap: 6px; 
+            transition: background 0.2s ease; 
+        }
+        .btn-control span { display: none; } 
+        .btn-control.btn-add-main span { display: inline; } 
+        
         #importFile { display: none; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--surface-color); width: 100%; max-width: 300px; border-radius: 20px; overflow: hidden; }
+        .modal-btn { width: 100%; padding: 18px; text-align: center; font-size: 16px; font-weight: 600; color: var(--text-primary); cursor: pointer; border-bottom: 1px solid var(--border-color); }
+        .modal-btn.danger { color: #ff3b30; }
+        .modal-btn:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Gym Diary</h1>
-        <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn"></button>
+    <div class="app-container">
+        <div class="header">
+            <h1>Gym Diary</h1>
+            <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn"></button>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchWorkout('A', this)">Workout A</div>
+            <div class="tab" onclick="switchWorkout('B', this)">Workout B</div>
+        </div>
+
+        <div id="app-content"></div>
+        
+        <div class="footer-controls">
+            <button class="btn-control" onclick="exportToFile()" title="Export">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            </button>
+            <button class="btn-control" onclick="document.getElementById('importFile').click()" title="Import">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            </button>
+            <button class="btn-control btn-add-main" onclick="addExercise()">
+                <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Add Exercise</span>
+            </button>
+        </div>
+        <input type="file" id="importFile" accept=".json" onchange="importFromFile(event)">
     </div>
 
-    <div class="tabs">
-        <div class="tab active" onclick="switchWorkout('A', this)">Тренировка А</div>
-        <div class="tab" onclick="switchWorkout('B', this)">Тренировка Б</div>
+    <div class="modal-overlay" id="var-modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-btn" id="modal-rename-btn">Rename Variation</div>
+            <div class="modal-btn danger" id="modal-delete-btn">Delete Variation</div>
+            <div class="modal-btn" style="color: var(--text-muted)" onclick="closeModal()">Cancel</div>
+        </div>
     </div>
-
-    <div id="app-content"></div>
-    
-    <button class="btn-add" onclick="addExercise()">+ Добавить упражнение</button>
-
-    <div class="data-controls">
-        <button class="btn-data" onclick="exportToFile()">
-            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            Экспорт
-        </button>
-        <button class="btn-data" onclick="document.getElementById('importFile').click()">
-            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-            Импорт
-        </button>
-    </div>
-    <input type="file" id="importFile" accept=".json" onchange="importFromFile(event)">
 
     <script>
-        // Service Worker (улучшен для Vercel)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swCode = `
-                    self.addEventListener('install', e => self.skipWaiting());
-                    self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-                    self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => {})));
-                `;
-                const blob = new Blob([swCode], {type: 'text/javascript'});
-                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => console.log('SW error', err));
-            });
-        }
-
-        const iconEdit = `<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-        const iconTrash = `<svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
-        const iconPhoto = `<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
         const iconSun = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
         const iconMoon = `<svg class="icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+        const iconEdit = `<svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+        const iconTrash = `<svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+        const iconPhoto = `<svg class="icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
 
-        let workouts = JSON.parse(localStorage.getItem('customWorkouts')) || { 'A': [{ name: "Жим гантелей" }], 'B': [{ name: "Жим в Хаммере" }] };
-        let exercisePhotos = JSON.parse(localStorage.getItem('exercisePhotos')) || {};
+        let workouts = JSON.parse(localStorage.getItem('customWorkouts')) || { 'A': [{ name: "Dumbbell Press", variations: ["Default"] }], 'B': [] };
+        let exercisePhotos = JSON.parse(localStorage.getItem('exercisePhotos')) || {}; 
+        let activeVars = JSON.parse(localStorage.getItem('activeVars')) || {}; 
         let currentWorkout = 'A';
+        let expandedCardId = null; 
+        let pressTimer;
 
         function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            document.getElementById('theme-btn').innerHTML = savedTheme === 'light' ? iconMoon : iconSun;
+            const saved = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+            document.getElementById('theme-btn').innerHTML = saved === 'light' ? iconMoon : iconSun;
         }
 
         function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            document.getElementById('theme-btn').innerHTML = newTheme === 'light' ? iconMoon : iconSun;
+            const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.getElementById('theme-btn').innerHTML = next === 'light' ? iconMoon : iconSun;
         }
 
         function switchWorkout(type, el) {
             currentWorkout = type;
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            expandedCardId = null;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             el.classList.add('active');
             render();
         }
 
-        function toggleCard(index) {
-            const card = document.getElementById(`card-${index}`);
-            const expanded = card.classList.contains('expanded');
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('expanded'));
-            if (!expanded) card.classList.add('expanded');
+        function toggleCard(id) {
+            expandedCardId = (expandedCardId === id) ? null : id;
+            render();
         }
 
-        async function uploadPhoto(exerciseName) {
+        function handleVarTouchStart(exIdx, v, e) {
+            pressTimer = window.setTimeout(() => openVarModal(exIdx, v), 600);
+        }
+
+        function handleVarTouchEnd() { clearTimeout(pressTimer); }
+
+        function selectVariation(exIndex, varName, e) {
+            if(e) e.stopPropagation();
+            const exName = workouts[currentWorkout][exIndex].name;
+            activeVars[exName] = varName;
+            localStorage.setItem('activeVars', JSON.stringify(activeVars));
+            render();
+        }
+
+        function openVarModal(exIdx, vName) {
+            const modal = document.getElementById('var-modal');
+            modal.style.display = 'flex';
+            document.getElementById('modal-rename-btn').onclick = () => {
+                const newName = prompt("Rename:", vName);
+                if (newName && newName !== vName) {
+                    const ex = workouts[currentWorkout][exIdx];
+                    const vIdx = ex.variations.indexOf(vName);
+                    ex.variations[vIdx] = newName;
+                    if (exercisePhotos[`${ex.name}|${vName}`]) {
+                        exercisePhotos[`${ex.name}|${newName}`] = exercisePhotos[`${ex.name}|${vName}`];
+                        delete exercisePhotos[`${ex.name}|${vName}`];
+                    }
+                    if (activeVars[ex.name] === vName) activeVars[ex.name] = newName;
+                    saveState();
+                }
+                closeModal();
+            };
+            document.getElementById('modal-delete-btn').onclick = () => {
+                if (confirm(`Delete "${vName}"?`)) {
+                    const ex = workouts[currentWorkout][exIdx];
+                    ex.variations = ex.variations.filter(v => v !== vName);
+                    if (ex.variations.length === 0) ex.variations = ["Default"];
+                    delete exercisePhotos[`${ex.name}|${vName}`];
+                    activeVars[ex.name] = ex.variations[0];
+                    saveState();
+                }
+                closeModal();
+            };
+        }
+
+        function closeModal() { document.getElementById('var-modal').style.display = 'none'; }
+
+        function addVariation(exIndex, e) {
+            if(e) e.stopPropagation();
+            const name = prompt("Variation name:");
+            if (name) {
+                if (!workouts[currentWorkout][exIndex].variations) workouts[currentWorkout][exIndex].variations = ["Default"];
+                workouts[currentWorkout][exIndex].variations.push(name);
+                selectVariation(exIndex, name);
+                saveState();
+            }
+        }
+
+        async function uploadPhoto(exName, varName) {
+            const key = `${exName}|${varName}`;
             const input = document.createElement('input');
             input.type = 'file'; input.accept = 'image/*';
             input.onchange = e => {
                 const file = e.target.files[0];
                 const reader = new FileReader();
-                reader.onload = (ev) => {
+                reader.onload = ev => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
@@ -194,7 +289,7 @@
                         canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
-                        exercisePhotos[exerciseName] = canvas.toDataURL('image/jpeg', 0.6);
+                        exercisePhotos[key] = canvas.toDataURL('image/jpeg', 0.6);
                         localStorage.setItem('exercisePhotos', JSON.stringify(exercisePhotos));
                         render();
                     };
@@ -211,39 +306,54 @@
             const history = JSON.parse(localStorage.getItem('gymHistory2')) || [];
 
             workouts[currentWorkout].forEach((ex, index) => {
-                const lastEntry = history.find(e => e.exercise === ex.name);
-                const w = lastEntry?.weight || '--', rm = lastEntry?.warmup || '';
-                const photo = exercisePhotos[ex.name];
-
+                const variations = ex.variations || ["Default"];
+                const curVar = activeVars[ex.name] || variations[0];
+                const last = history.find(e => e.exercise === ex.name && e.variation === curVar);
+                const photoKey = `${ex.name}|${curVar}`;
+                const photo = exercisePhotos[photoKey];
+                const isExpanded = (expandedCardId === index);
+                
                 const card = document.createElement('div');
-                card.className = 'card';
-                card.id = `card-${index}`;
+                card.className = `card ${isExpanded ? 'expanded' : ''}`;
                 card.innerHTML = `
                     <div class="card-header" onclick="toggleCard(${index})">
                         <div class="health-left">
+                            <div class="variation-sub">${curVar}</div>
                             <div class="title">${ex.name}</div>
-                            <div class="warmup-label">${rm ? `Размин: <b>${rm}</b> кг` : 'Разминка: --'}</div>
+                            <div class="warmup-label">${last?.warmup ? `Warmup: <b>${last.warmup}</b>` : 'Warmup: --'}</div>
                         </div>
                         <div class="health-right">
-                            <div class="weight-value">${w}<span class="weight-unit">кг</span></div>
+                            <div class="weight-value">${last?.weight || '--'}<span class="weight-unit">kg</span></div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="card-top-actions">
-                            <button class="action-link" onclick="editName(${index}, event)">${iconEdit} Название</button>
-                            <button class="action-link" onclick="deleteExercise(${index}, event)">${iconTrash} Удалить</button>
+                        <div class="var-selector">
+                            ${variations.map(v => `
+                                <div class="var-chip ${v === curVar ? 'active' : ''}" 
+                                     onclick="selectVariation(${index}, '${v}', event)"
+                                     onmousedown="handleVarTouchStart(${index}, '${v}', event)"
+                                     onmouseup="handleVarTouchEnd()"
+                                     ontouchstart="handleVarTouchStart(${index}, '${v}', event)"
+                                     ontouchend="handleVarTouchEnd()">
+                                     ${v}
+                                </div>`).join('')}
+                            <div class="var-add" onclick="addVariation(${index}, event)">+ Var</div>
                         </div>
 
                         <div class="input-grid">
-                            <div class="input-wrapper"><label>Рабочий</label><input type="text" id="w-${index}" inputmode="decimal" placeholder="0"></div>
-                            <div class="input-wrapper"><label>Разминка</label><input type="text" id="rm-${index}" inputmode="decimal" placeholder="0"></div>
+                            <div class="input-wrapper"><label>Working</label><input type="text" id="w-${index}" inputmode="decimal" placeholder="0"></div>
+                            <div class="input-wrapper"><label>Warmup</label><input type="text" id="rm-${index}" inputmode="decimal" placeholder="0"></div>
                         </div>
-                        <button class="btn-save" onclick="saveExercise('${ex.name}', 'w-${index}', 'rm-${index}')">Записать</button>
+                        <button class="btn-save" onclick="saveExercise('${ex.name}', '${curVar}', 'w-${index}', 'rm-${index}')">Save</button>
 
                         <div class="photo-section">
-                            <div class="photo-container">
-                                ${photo ? `<img src="${photo}"><button class="photo-remove" onclick="removePhoto('${ex.name}', event)">✕</button>` 
-                                        : `<div class="photo-btn" onclick="uploadPhoto('${ex.name}')">${iconPhoto} Фото тренажера</div>`}
+                            ${!photo ? `<div class="photo-btn" onclick="uploadPhoto('${ex.name}', '${curVar}')">${iconPhoto} Photo for ${curVar}</div>` : ''}
+                            <div class="photo-container ${photo ? 'has-photo' : ''}">
+                                ${photo ? `<img src="${photo}"><button class="photo-remove" onclick="removePhoto('${ex.name}', '${curVar}', event)">✕</button>` : ''}
+                            </div>
+                            <div class="bottom-actions">
+                                <button class="action-link-btn" onclick="editEx(${index}, event)">${iconEdit} Rename</button>
+                                <button class="action-link-btn" onclick="deleteEx(${index}, event)">${iconTrash} Delete</button>
                             </div>
                         </div>
                     </div>
@@ -252,14 +362,28 @@
             });
         }
 
-        function addExercise() { const name = prompt("Название:"); if (name) { workouts[currentWorkout].push({ name }); saveState(); } }
-        function editName(i, e) { e.stopPropagation(); const old = workouts[currentWorkout][i].name; const n = prompt("Новое название:", old); if (n) { if (exercisePhotos[old]) { exercisePhotos[n] = exercisePhotos[old]; delete exercisePhotos[old]; } workouts[currentWorkout][i].name = n; saveState(); localStorage.setItem('exercisePhotos', JSON.stringify(exercisePhotos)); } }
-        function deleteExercise(i, e) { e.stopPropagation(); if (confirm("Удалить?")) { delete exercisePhotos[workouts[currentWorkout][i].name]; workouts[currentWorkout].splice(i, 1); saveState(); localStorage.setItem('exercisePhotos', JSON.stringify(exercisePhotos)); } }
-        function removePhoto(n, e) { e.stopPropagation(); delete exercisePhotos[n]; localStorage.setItem('exercisePhotos', JSON.stringify(exercisePhotos)); render(); }
-        function saveExercise(name, wId, rmId) { const wVal = document.getElementById(wId).value.trim(); const rmVal = document.getElementById(rmId).value.trim(); if (!wVal && !rmVal) return; const history = JSON.parse(localStorage.getItem('gymHistory2')) || []; const last = history.find(e => e.exercise === name); history.unshift({ exercise: name, weight: wVal || last?.weight || '-', warmup: rmVal || last?.warmup || '-', date: new Date().toLocaleDateString() }); localStorage.setItem('gymHistory2', JSON.stringify(history)); render(); }
-        function saveState() { localStorage.setItem('customWorkouts', JSON.stringify(workouts)); render(); }
-        function exportToFile() { const data = { h: localStorage.getItem('gymHistory2'), w: localStorage.getItem('customWorkouts'), p: localStorage.getItem('exercisePhotos') }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `gym_backup.json`; a.click(); }
-        function importFromFile(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const d = JSON.parse(e.target.result); if (d.h) localStorage.setItem('gymHistory2', d.h); if (d.w) localStorage.setItem('customWorkouts', d.w); if (d.p) localStorage.setItem('exercisePhotos', d.p); location.reload(); } catch(err) { alert("Ошибка файла"); } }; reader.readAsText(file); }
+        function saveExercise(name, curVar, wId, rmId) {
+            const w = document.getElementById(wId).value.trim();
+            const rm = document.getElementById(rmId).value.trim();
+            if (!w && !rm) return;
+            const h = JSON.parse(localStorage.getItem('gymHistory2')) || [];
+            const last = h.find(e => e.exercise === name && e.variation === curVar);
+            h.unshift({ exercise: name, variation: curVar, weight: w || last?.weight || '-', warmup: rm || last?.warmup || '-', date: new Date().toLocaleDateString() });
+            localStorage.setItem('gymHistory2', JSON.stringify(h));
+            render();
+        }
+
+        function addExercise() { const n = prompt("Exercise Name:"); if (n) { workouts[currentWorkout].push({ name: n, variations: ["Default"] }); saveState(); } }
+        function editEx(i, e) { e.stopPropagation(); const old = workouts[currentWorkout][i].name; const n = prompt("New Name:", old); if (n) { workouts[currentWorkout][i].name = n; saveState(); } }
+        function deleteEx(i, e) { e.stopPropagation(); if (confirm("Delete?")) { workouts[currentWorkout].splice(i, 1); saveState(); } }
+        function removePhoto(ex, vr, e) { e.stopPropagation(); delete exercisePhotos[`${ex}|${vr}`]; localStorage.setItem('exercisePhotos', JSON.stringify(exercisePhotos)); render(); }
+        function saveState() { 
+            localStorage.setItem('customWorkouts', JSON.stringify(workouts)); 
+            localStorage.setItem('activeVars', JSON.stringify(activeVars));
+            render(); 
+        }
+        function exportToFile() { const d = { h: localStorage.getItem('gymHistory2'), w: localStorage.getItem('customWorkouts'), p: localStorage.getItem('exercisePhotos'), a: localStorage.getItem('activeVars') }; const blob = new Blob([JSON.stringify(d)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `gym_backup.json`; a.click(); }
+        function importFromFile(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { const d = JSON.parse(ev.target.result); if (d.h) localStorage.setItem('gymHistory2', d.h); if (d.w) localStorage.setItem('customWorkouts', d.w); if (d.p) localStorage.setItem('exercisePhotos', d.p); if (d.a) localStorage.setItem('activeVars', d.a); location.reload(); }; r.readAsText(f); }
         
         initTheme(); render();
     </script>
