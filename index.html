@@ -9,7 +9,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="GymDiary">
+    <meta name="display" content="standalone">
     
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936886.png">
     
@@ -59,7 +59,6 @@
             transition: background-color 0.3s ease;
             display: flex; justify-content: center;
             -webkit-user-select: none; user-select: none;
-            /* Чтобы контент не залезал под челку на iPhone */
             padding-top: env(safe-area-inset-top);
         }
 
@@ -115,8 +114,23 @@
         .bottom-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .action-link-btn { background: var(--control-bg); color: var(--text-secondary); padding: 12px; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; }
 
-        .footer-controls { display: grid; grid-template-columns: 1fr 1fr 3fr; gap: 8px; margin-top: 24px; }
-        .btn-control { background: var(--control-bg); color: var(--text-primary); padding: 14px 4px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s ease; }
+        .footer-controls { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 3fr; 
+            gap: 8px; 
+            margin-top: 24px; 
+        }
+        .btn-control { 
+            background: var(--control-bg); 
+            color: var(--text-primary); 
+            padding: 14px 4px; 
+            border-radius: 12px; 
+            font-size: 12px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; gap: 6px; 
+            transition: background 0.2s ease; 
+        }
         .btn-control span { display: none; } 
         .btn-control.btn-add-main span { display: inline; } 
         
@@ -164,7 +178,8 @@
     </div>
 
     <script>
-        // РЕГИСТРАЦИЯ SERVICE WORKER (ОБЯЗАТЕЛЬНО ДЛЯ PWA)
+        // SERVICE WORKER С ВЕРСИЕЙ ДЛЯ ОБНОВЛЕНИЯ
+        const VERSION = '1.0.5'; 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const sw = `self.addEventListener('fetch', (e) => {});`;
@@ -285,7 +300,8 @@
                         let w = img.width, h = img.height, max = 800;
                         if (w > h) { if (w > max) { h *= max/w; w = max; } } else { if (h > max) { w *= max/h; h = max; } }
                         canvas.width = w; canvas.height = h;
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
                         exercisePhotos[key] = canvas.toDataURL('image/jpeg', 0.6);
                         localStorage.setItem('exercisePhotos', JSON.stringify(exercisePhotos));
                         render();
@@ -381,6 +397,7 @@
         }
         function exportToFile() { const d = { h: localStorage.getItem('gymHistory2'), w: localStorage.getItem('customWorkouts'), p: localStorage.getItem('exercisePhotos'), a: localStorage.getItem('activeVars') }; const blob = new Blob([JSON.stringify(d)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `gym_backup.json`; a.click(); }
         function importFromFile(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { const d = JSON.parse(ev.target.result); if (d.h) localStorage.setItem('gymHistory2', d.h); if (d.w) localStorage.setItem('customWorkouts', d.w); if (d.p) localStorage.setItem('exercisePhotos', d.p); if (d.a) localStorage.setItem('activeVars', d.a); location.reload(); }; r.readAsText(f); }
+        
         initTheme(); render();
     </script>
 </body>
