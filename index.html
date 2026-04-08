@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Gym Diary</title>
     
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#121212">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,12 +13,12 @@
     
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936886.png">
     
-    <link rel="manifest" href='data:application/json,{"name":"Gym Diary","short_name":"GymDiary","start_url":"/","scope":"/","display":"standalone","display_override":["standalone","fullscreen"],"orientation":"portrait","background_color":"#000000","theme_color":"#000000","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2936/2936886.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
+    <link rel="manifest" href='data:application/json,{"name":"Gym Diary","short_name":"GymDiary","start_url":"/","scope":"/","display":"standalone","display_override":["standalone","fullscreen"],"orientation":"portrait","background_color":"#121212","theme_color":"#121212","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2936/2936886.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #000000; 
+            --bg-color: #121212; 
             --surface-color: #1c1c1e; 
             --surface-lighter: #2c2c2e; 
             --text-primary: #ffffff; 
@@ -27,7 +27,10 @@
             --border-color: #2c2c2e;
             --btn-save-bg: #f2f2f7; 
             --btn-save-text: #000000;
-            --control-bg: #121214;
+            
+            /* Кнопки теперь #181818: они заметны на фоне #121212, но темнее карточек #1c1c1e */
+            --control-bg: #181818; 
+            
             --active-var-bg: #3a3a3c;
             --active-var-text: #ffffff;
             --radius-xl: 16px; 
@@ -68,8 +71,6 @@
             padding-bottom: max(100px, env(safe-area-inset-bottom));
         }
 
-        .icon { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-        
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-top: 8px; }
         h1 { font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
         .theme-toggle { background: none; color: var(--text-primary); cursor: pointer; padding: 8px; display: flex; }
@@ -91,14 +92,10 @@
         .card.expanded .card-body { display: block; }
 
         .var-selector { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 8px; scrollbar-width: none; }
-        .var-selector::-webkit-scrollbar { display: none; }
         .var-chip { padding: 8px 14px; background: var(--surface-lighter); border-radius: 20px; font-size: 12px; font-weight: 700; color: var(--text-muted); white-space: nowrap; cursor: pointer; transition: all 0.2s ease; }
         .var-chip.active { background: var(--active-var-bg); color: var(--active-var-text); }
         .var-add { background: var(--control-bg); color: var(--text-secondary); padding: 8px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
-        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-        .input-wrapper { position: relative; background: var(--surface-lighter); border-radius: var(--radius-md); padding: 10px 14px; }
-        .input-wrapper label { display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
         input { width: 100%; background: none; color: var(--text-primary); font-size: 18px; font-weight: 700; padding: 0; -webkit-user-select: text; user-select: text;}
 
         .btn-save { width: 100%; background: var(--btn-save-bg); color: var(--btn-save-text); padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 800; text-transform: uppercase; cursor: pointer; margin-bottom: 16px; transition: opacity 0.2s; }
@@ -114,6 +111,7 @@
         .bottom-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .action-link-btn { background: var(--control-bg); color: var(--text-secondary); padding: 12px; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; }
 
+        /* Footer Сетка */
         .footer-controls { 
             display: grid; 
             grid-template-columns: 1fr 1fr 3fr; 
@@ -131,8 +129,11 @@
             display: flex; align-items: center; justify-content: center; gap: 6px; 
             transition: background 0.2s ease; 
         }
+        .btn-control:active { background: var(--surface-lighter); }
         .btn-control span { display: none; } 
         .btn-control.btn-add-main span { display: inline; } 
+
+        .icon { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
         
         #importFile { display: none; }
 
@@ -159,8 +160,12 @@
         <div id="app-content"></div>
         
         <div class="footer-controls">
-            <button class="btn-control" onclick="exportToFile()" title="Export"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
-            <button class="btn-control" onclick="document.getElementById('importFile').click()" title="Import"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></button>
+            <button class="btn-control" onclick="exportToFile()" title="Export">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            </button>
+            <button class="btn-control" onclick="document.getElementById('importFile').click()" title="Import">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            </button>
             <button class="btn-control btn-add-main" onclick="addExercise()">
                 <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 <span>Add Exercise</span>
@@ -178,7 +183,6 @@
     </div>
 
     <script>
-        // SERVICE WORKER С ПРИНУДИТЕЛЬНЫМ ОБНОВЛЕНИЕМ
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('data:text/javascript,' + encodeURIComponent('self.addEventListener("fetch", (e) => { e.respondWith(fetch(e.request)); }); self.addEventListener("install", (e) => { self.skipWaiting(); });'))
             .then(reg => reg.update());
@@ -186,9 +190,6 @@
 
         const iconSun = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
         const iconMoon = `<svg class="icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
-        const iconEdit = `<svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-        const iconTrash = `<svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
-        const iconPhoto = `<svg class="icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
 
         let workouts = JSON.parse(localStorage.getItem('customWorkouts')) || { 'A': [{ name: "Dumbbell Press", variations: ["Default"] }], 'B': [] };
         let exercisePhotos = JSON.parse(localStorage.getItem('exercisePhotos')) || {}; 
@@ -349,20 +350,20 @@
                             <div class="var-add" onclick="addVariation(${index}, event)">+ Var</div>
                         </div>
 
-                        <div class="input-grid">
-                            <div class="input-wrapper"><label>Working</label><input type="text" id="w-${index}" inputmode="decimal" placeholder="0"></div>
-                            <div class="input-wrapper"><label>Warmup</label><input type="text" id="rm-${index}" inputmode="decimal" placeholder="0"></div>
+                        <div class="input-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                            <div style="background: var(--surface-lighter); border-radius: 10px; padding: 10px 14px;"><label style="display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Working</label><input type="text" id="w-${index}" inputmode="decimal" placeholder="0" style="width: 100%; background: none; color: var(--text-primary); font-size: 18px; font-weight: 700; padding: 0;"></div>
+                            <div style="background: var(--surface-lighter); border-radius: 10px; padding: 10px 14px;"><label style="display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Warmup</label><input type="text" id="rm-${index}" inputmode="decimal" placeholder="0" style="width: 100%; background: none; color: var(--text-primary); font-size: 18px; font-weight: 700; padding: 0;"></div>
                         </div>
                         <button class="btn-save" onclick="saveExercise('${ex.name}', '${curVar}', 'w-${index}', 'rm-${index}')">Save</button>
 
                         <div class="photo-section">
-                            ${!photo ? `<div class="photo-btn" onclick="uploadPhoto('${ex.name}', '${curVar}')">${iconPhoto} Photo for ${curVar}</div>` : ''}
+                            ${!photo ? `<div class="photo-btn" onclick="uploadPhoto('${ex.name}', '${curVar}')">Photo for ${curVar}</div>` : ''}
                             <div class="photo-container ${photo ? 'has-photo' : ''}">
                                 ${photo ? `<img src="${photo}"><button class="photo-remove" onclick="removePhoto('${ex.name}', '${curVar}', event)">✕</button>` : ''}
                             </div>
                             <div class="bottom-actions">
-                                <button class="action-link-btn" onclick="editEx(${index}, event)">${iconEdit} Rename</button>
-                                <button class="action-link-btn" onclick="deleteEx(${index}, event)">${iconTrash} Delete</button>
+                                <button class="action-link-btn" onclick="editEx(${index}, event)">Rename</button>
+                                <button class="action-link-btn" onclick="deleteEx(${index}, event)">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -376,8 +377,7 @@
             const rm = document.getElementById(rmId).value.trim();
             if (!w && !rm) return;
             const h = JSON.parse(localStorage.getItem('gymHistory2')) || [];
-            const last = h.find(e => e.exercise === name && e.variation === curVar);
-            h.unshift({ exercise: name, variation: curVar, weight: w || last?.weight || '-', warmup: rm || last?.warmup || '-', date: new Date().toLocaleDateString() });
+            h.unshift({ exercise: name, variation: curVar, weight: w || '-', warmup: rm || '-', date: new Date().toLocaleDateString() });
             localStorage.setItem('gymHistory2', JSON.stringify(h));
             render();
         }
@@ -392,8 +392,7 @@
             render(); 
         }
         function exportToFile() { const d = { h: localStorage.getItem('gymHistory2'), w: localStorage.getItem('customWorkouts'), p: localStorage.getItem('exercisePhotos'), a: localStorage.getItem('activeVars') }; const blob = new Blob([JSON.stringify(d)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `gym_backup.json`; a.click(); }
-        function importFromFile(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { const d = JSON.parse(ev.target.result); if (d.h) localStorage.setItem('gymHistory2', d.h); if (d.w) localStorage.setItem('customWorkouts', d.w); if (d.p) localStorage.setItem('exercisePhotos', d.p); if (d.a) localStorage.setItem('activeVars', d.a); location.reload(); }; r.readAsText(f); }
-        
+        function importFromFile(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { const d = JSON.parse(ev.target.result); if (d.h) localStorage.setItem('gymHistory2', d.h); if (d.w) localStorage.setItem('customWorkouts', typeof d.w === 'string' ? JSON.parse(d.w) : d.w); if (d.p) localStorage.setItem('exercisePhotos', d.p); if (d.a) localStorage.setItem('activeVars', d.a); location.reload(); }; r.readAsText(f); }
         initTheme(); render();
     </script>
 </body>
