@@ -9,11 +9,11 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="display" content="standalone">
+    <meta name="apple-mobile-web-app-title" content="GymDiary">
     
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936886.png">
     
-    <link rel="manifest" href='data:application/json,{"name":"Gym Diary","short_name":"GymDiary","start_url":"/","display":"standalone","orientation":"portrait","background_color":"#000000","theme_color":"#000000","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2936/2936886.png","sizes":"512x512","type":"image/png"}]}'>
+    <link rel="manifest" href='data:application/json,{"name":"Gym Diary","short_name":"GymDiary","start_url":"/","scope":"/","display":"standalone","display_override":["standalone","fullscreen"],"orientation":"portrait","background_color":"#000000","theme_color":"#000000","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2936/2936886.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -178,14 +178,10 @@
     </div>
 
     <script>
-        // SERVICE WORKER С ВЕРСИЕЙ ДЛЯ ОБНОВЛЕНИЯ
-        const VERSION = '1.0.5'; 
+        // SERVICE WORKER С ПРИНУДИТЕЛЬНЫМ ОБНОВЛЕНИЕМ
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const sw = `self.addEventListener('fetch', (e) => {});`;
-                const blob = new Blob([sw], {type: 'text/javascript'});
-                navigator.serviceWorker.register(URL.createObjectURL(blob));
-            });
+            navigator.serviceWorker.register('data:text/javascript,' + encodeURIComponent('self.addEventListener("fetch", (e) => { e.respondWith(fetch(e.request)); }); self.addEventListener("install", (e) => { self.skipWaiting(); });'))
+            .then(reg => reg.update());
         }
 
         const iconSun = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
