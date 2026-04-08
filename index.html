@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Gym Diary</title>
+    
     <meta name="theme-color" content="#000000">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GymDiary">
+    
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936886.png">
-    <link rel="manifest" href='data:application/json,{"name":"Gym Diary","short_name":"GymDiary","start_url":"/","display":"standalone","background_color":"#000000","theme_color":"#000000","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2936/2936886.png","sizes":"512x512","type":"image/png"}]}'>
+    
+    <link rel="manifest" href='data:application/json,{"name":"Gym Diary","short_name":"GymDiary","start_url":"/","display":"standalone","orientation":"portrait","background_color":"#000000","theme_color":"#000000","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2936/2936886.png","sizes":"512x512","type":"image/png"}]}'>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -55,16 +59,19 @@
             transition: background-color 0.3s ease;
             display: flex; justify-content: center;
             -webkit-user-select: none; user-select: none;
+            /* Чтобы контент не залезал под челку на iPhone */
+            padding-top: env(safe-area-inset-top);
         }
 
         .app-container {
             width: 100%; max-width: 600px; min-height: 100vh;
-            padding: max(24px, env(safe-area-inset-top)) 16px max(100px, env(safe-area-inset-bottom));
+            padding: 16px;
+            padding-bottom: max(100px, env(safe-area-inset-bottom));
         }
 
         .icon { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-top: 8px; }
         h1 { font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
         .theme-toggle { background: none; color: var(--text-primary); cursor: pointer; padding: 8px; display: flex; }
 
@@ -108,23 +115,8 @@
         .bottom-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .action-link-btn { background: var(--control-bg); color: var(--text-secondary); padding: 12px; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; }
 
-        .footer-controls { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr 3fr; 
-            gap: 8px; 
-            margin-top: 24px; 
-        }
-        .btn-control { 
-            background: var(--control-bg); 
-            color: var(--text-primary); 
-            padding: 14px 4px; 
-            border-radius: 12px; 
-            font-size: 12px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            display: flex; align-items: center; justify-content: center; gap: 6px; 
-            transition: background 0.2s ease; 
-        }
+        .footer-controls { display: grid; grid-template-columns: 1fr 1fr 3fr; gap: 8px; margin-top: 24px; }
+        .btn-control { background: var(--control-bg); color: var(--text-primary); padding: 14px 4px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s ease; }
         .btn-control span { display: none; } 
         .btn-control.btn-add-main span { display: inline; } 
         
@@ -153,12 +145,8 @@
         <div id="app-content"></div>
         
         <div class="footer-controls">
-            <button class="btn-control" onclick="exportToFile()" title="Export">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            </button>
-            <button class="btn-control" onclick="document.getElementById('importFile').click()" title="Import">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-            </button>
+            <button class="btn-control" onclick="exportToFile()" title="Export"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+            <button class="btn-control" onclick="document.getElementById('importFile').click()" title="Import"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></button>
             <button class="btn-control btn-add-main" onclick="addExercise()">
                 <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 <span>Add Exercise</span>
@@ -176,6 +164,15 @@
     </div>
 
     <script>
+        // РЕГИСТРАЦИЯ SERVICE WORKER (ОБЯЗАТЕЛЬНО ДЛЯ PWA)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const sw = `self.addEventListener('fetch', (e) => {});`;
+                const blob = new Blob([sw], {type: 'text/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(blob));
+            });
+        }
+
         const iconSun = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
         const iconMoon = `<svg class="icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
         const iconEdit = `<svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
@@ -186,7 +183,7 @@
         let exercisePhotos = JSON.parse(localStorage.getItem('exercisePhotos')) || {}; 
         let activeVars = JSON.parse(localStorage.getItem('activeVars')) || {}; 
         let currentWorkout = 'A';
-        let expandedCardId = null; 
+        let expandedCardId = null;
         let pressTimer;
 
         function initTheme() {
@@ -196,7 +193,8 @@
         }
 
         function toggleTheme() {
-            const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            const cur = document.documentElement.getAttribute('data-theme');
+            const next = cur === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
             document.getElementById('theme-btn').innerHTML = next === 'light' ? iconMoon : iconSun;
@@ -287,8 +285,7 @@
                         let w = img.width, h = img.height, max = 800;
                         if (w > h) { if (w > max) { h *= max/w; w = max; } } else { if (h > max) { w *= max/h; h = max; } }
                         canvas.width = w; canvas.height = h;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, w, h);
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                         exercisePhotos[key] = canvas.toDataURL('image/jpeg', 0.6);
                         localStorage.setItem('exercisePhotos', JSON.stringify(exercisePhotos));
                         render();
@@ -384,7 +381,6 @@
         }
         function exportToFile() { const d = { h: localStorage.getItem('gymHistory2'), w: localStorage.getItem('customWorkouts'), p: localStorage.getItem('exercisePhotos'), a: localStorage.getItem('activeVars') }; const blob = new Blob([JSON.stringify(d)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `gym_backup.json`; a.click(); }
         function importFromFile(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { const d = JSON.parse(ev.target.result); if (d.h) localStorage.setItem('gymHistory2', d.h); if (d.w) localStorage.setItem('customWorkouts', d.w); if (d.p) localStorage.setItem('exercisePhotos', d.p); if (d.a) localStorage.setItem('activeVars', d.a); location.reload(); }; r.readAsText(f); }
-        
         initTheme(); render();
     </script>
 </body>
