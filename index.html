@@ -72,6 +72,7 @@
         
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-top: 8px; }
         h1 { font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+        .header-actions { display: flex; gap: 8px; }
         .theme-toggle { background: none; color: var(--text-primary); cursor: pointer; padding: 8px; display: flex; }
 
         .tabs { display: flex; background: var(--surface-color); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
@@ -133,8 +134,26 @@
         }
         .btn-control span { display: none; } 
         .btn-control.btn-add-main span { display: inline; } 
+        .btn-control:active { background: var(--surface-lighter); }
         
         #importFile { display: none; }
+
+        /* Стиль для поля заметок */
+        #notes-area {
+            width: 100%;
+            height: calc(100vh - 180px);
+            background: var(--surface-color);
+            border-radius: var(--radius-xl);
+            padding: 20px;
+            color: var(--text-primary);
+            font-size: 16px;
+            line-height: 1.6;
+            resize: none;
+            border: none;
+            outline: none;
+            -webkit-user-select: text;
+            user-select: text;
+        }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: var(--surface-color); width: 100%; max-width: 300px; border-radius: 20px; overflow: hidden; }
@@ -147,25 +166,35 @@
 
     <div class="app-container">
         <div class="header">
-            <h1>Gym Diary</h1>
-            <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn"></button>
+            <h1 id="main-title">Gym Diary</h1>
+            <div class="header-actions">
+                <button class="theme-toggle" onclick="toggleNotes()" id="notes-btn"></button>
+                <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn"></button>
+            </div>
         </div>
 
-        <div class="tabs">
-            <div class="tab active" onclick="switchWorkout('A', this)">Workout A</div>
-            <div class="tab" onclick="switchWorkout('B', this)">Workout B</div>
+        <div id="workout-view">
+            <div class="tabs">
+                <div class="tab active" onclick="switchWorkout('A', this)">Workout A</div>
+                <div class="tab" onclick="switchWorkout('B', this)">Workout B</div>
+            </div>
+
+            <div id="app-content"></div>
+            
+            <div class="footer-controls">
+                <button class="btn-control" onclick="exportToFile()" title="Export"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+                <button class="btn-control" onclick="document.getElementById('importFile').click()" title="Import"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></button>
+                <button class="btn-control btn-add-main" onclick="addExercise()">
+                    <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Add Exercise</span>
+                </button>
+            </div>
         </div>
 
-        <div id="app-content"></div>
-        
-        <div class="footer-controls">
-            <button class="btn-control" onclick="exportToFile()" title="Export"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
-            <button class="btn-control" onclick="document.getElementById('importFile').click()" title="Import"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></button>
-            <button class="btn-control btn-add-main" onclick="addExercise()">
-                <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                <span>Add Exercise</span>
-            </button>
+        <div id="notes-view" style="display:none;">
+            <textarea id="notes-area" placeholder="Write your notes here..." oninput="saveNotes()"></textarea>
         </div>
+
         <input type="file" id="importFile" accept=".json" onchange="importFromFile(event)">
     </div>
 
@@ -178,7 +207,6 @@
     </div>
 
     <script>
-        // SERVICE WORKER С ПРИНУДИТЕЛЬНЫМ ОБНОВЛЕНИЕМ
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('data:text/javascript,' + encodeURIComponent('self.addEventListener("fetch", (e) => { e.respondWith(fetch(e.request)); }); self.addEventListener("install", (e) => { self.skipWaiting(); });'))
             .then(reg => reg.update());
@@ -186,6 +214,8 @@
 
         const iconSun = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
         const iconMoon = `<svg class="icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+        const iconNote = `<svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`;
+        const iconClose = `<svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
         const iconEdit = `<svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
         const iconTrash = `<svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
         const iconPhoto = `<svg class="icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
@@ -196,11 +226,14 @@
         let currentWorkout = 'A';
         let expandedCardId = null;
         let pressTimer;
+        let isNotesOpen = false;
 
-        function initTheme() {
+        function initApp() {
             const saved = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', saved);
             document.getElementById('theme-btn').innerHTML = saved === 'light' ? iconMoon : iconSun;
+            document.getElementById('notes-btn').innerHTML = iconNote;
+            document.getElementById('notes-area').value = localStorage.getItem('gymNotes') || '';
         }
 
         function toggleTheme() {
@@ -209,6 +242,18 @@
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
             document.getElementById('theme-btn').innerHTML = next === 'light' ? iconMoon : iconSun;
+        }
+
+        function toggleNotes() {
+            isNotesOpen = !isNotesOpen;
+            document.getElementById('workout-view').style.display = isNotesOpen ? 'none' : 'block';
+            document.getElementById('notes-view').style.display = isNotesOpen ? 'block' : 'none';
+            document.getElementById('notes-btn').innerHTML = isNotesOpen ? iconClose : iconNote;
+            document.getElementById('main-title').innerText = isNotesOpen ? 'Notes' : 'Gym Diary';
+        }
+
+        function saveNotes() {
+            localStorage.setItem('gymNotes', document.getElementById('notes-area').value);
         }
 
         function switchWorkout(type, el) {
@@ -391,10 +436,10 @@
             localStorage.setItem('activeVars', JSON.stringify(activeVars));
             render(); 
         }
-        function exportToFile() { const d = { h: localStorage.getItem('gymHistory2'), w: localStorage.getItem('customWorkouts'), p: localStorage.getItem('exercisePhotos'), a: localStorage.getItem('activeVars') }; const blob = new Blob([JSON.stringify(d)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `gym_backup.json`; a.click(); }
-        function importFromFile(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { const d = JSON.parse(ev.target.result); if (d.h) localStorage.setItem('gymHistory2', d.h); if (d.w) localStorage.setItem('customWorkouts', d.w); if (d.p) localStorage.setItem('exercisePhotos', d.p); if (d.a) localStorage.setItem('activeVars', d.a); location.reload(); }; r.readAsText(f); }
+        function exportToFile() { const d = { h: localStorage.getItem('gymHistory2'), w: localStorage.getItem('customWorkouts'), p: localStorage.getItem('exercisePhotos'), a: localStorage.getItem('activeVars'), n: localStorage.getItem('gymNotes') }; const blob = new Blob([JSON.stringify(d)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `gym_backup.json`; a.click(); }
+        function importFromFile(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { const d = JSON.parse(ev.target.result); if (d.h) localStorage.setItem('gymHistory2', d.h); if (d.w) localStorage.setItem('customWorkouts', typeof d.w === 'string' ? d.w : JSON.stringify(d.w)); if (d.p) localStorage.setItem('exercisePhotos', d.p); if (d.a) localStorage.setItem('activeVars', d.a); if (d.n) { localStorage.setItem('gymNotes', d.n); document.getElementById('notes-area').value = d.n; } location.reload(); }; r.readAsText(f); }
         
-        initTheme(); render();
+        initApp(); render();
     </script>
 </body>
 </html>
